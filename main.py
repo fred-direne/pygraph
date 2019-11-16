@@ -1,4 +1,6 @@
 import tkinter as tk
+import tkinter.filedialog as fd
+import tkinter.messagebox as messagebox
 
 #TO-DO
 # add weight text above edges and possibility to edit them IM DOING THIS JUST NEED TO FIGURE OUT HOW TO GET VALUE FROM FORM AND UPDATE IT ON THE EDGE
@@ -7,11 +9,31 @@ import tkinter as tk
 # add feature to delete edges : SEARCH MORE
 # add feature to delete nodes and every edge connected to it : SEARCH MORE
 # possibilities: applying functions only change edge colors, keep track of before and after graphs, build graph as you are adding nodes and edges
+# save functions: define how i'm going to save the graph : FRED
 
 class App(tk.Tk):
     
     def __init__(self):
         super().__init__()
+        self.title("PyGraph")
+        #configuring and adding the menu bar
+        menu=tk.Menu(self)
+        file_menu=tk.Menu(menu,tearoff=0)
+        file_menu.add_command(label="New file")
+        file_menu.add_command(label="Open",command=self.choose_file)
+        file_menu.add_separator()
+        file_menu.add_command(label="Save",command=self.save_file)
+        file_menu.add_command(label="Save as...",command=self.save_as_file)
+        menu.add_cascade(label="File",menu=file_menu)
+        algorithm_menu=tk.Menu(menu,tearoff=0)
+        algorithm_menu.add_command(label="Eullerian Path")
+        algorithm_menu.add_command(label="Depth-first Search (DFS)")
+        algorithm_menu.add_command(label="Hamiltonian Path")
+        menu.add_cascade(label="Algorithm",menu=algorithm_menu)
+        menu.add_command(label="About",command=self.about)
+        menu.add_command(label="Quit",command=self.quit)
+        self.config(menu=menu)
+
         self.canvas = tk.Canvas(self, height=800, width=800, bg="white")
         frame = tk.Frame(self)
 
@@ -38,6 +60,41 @@ class App(tk.Tk):
 
         self.canvas.pack()
         frame.pack(fill=tk.BOTH)
+
+    #functions of the menubar
+    def choose_file(self):
+        filetypes=(("Plain text files","*.txt"),
+                    ("All files", "*"))
+        filename=fd.askopenfilename(title="Open file",
+                initialdir="/",
+                filetypes=filetypes)
+        if filename:
+            print(filename)
+
+    def save_file(self):
+        contents=self.text.get(1.0,tk.END)
+        new_file=fd.asksaveasfile(title="Save file",
+                    defaultextension=".txt",
+                    filetypes=(("Text files","*.txt"),))
+        if new_file:
+            new_file.write(contents)
+            new_file.close()
+
+    def save_as_file(self):
+        contents=self.text.get(1.0,tk.END)
+        new_file=fd.asksaveasfilename(title="Save file as",
+                    defaultextension=".txt",
+                    filetypes=(("Text files","*.txt"),))
+        if new_file:
+            new_file.write(contents)
+            new_file.close()
+
+    def quit(self):
+        if messagebox.askyesno('Quit','Do you really want to quit?'):
+            self.destroy()
+
+    def about(self):
+        messagebox.showinfo("PyGraph","\n PyGraph \n\n\n Version: 1.0 \n Github: https://github.com/ftdneves/graph_program.git")        
 
     def on_token_press(self, event):
         '''Beginning drag of an object'''
@@ -140,4 +197,5 @@ class App(tk.Tk):
         #ttk.Button(top2,text='OK',width=10,command=top2.destroy).pack(pady=8)
 
 app = App()
+app.iconbitmap('resources/img/graph.ico')
 app.mainloop()
