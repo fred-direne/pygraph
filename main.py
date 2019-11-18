@@ -1,25 +1,13 @@
 import tkinter as tk
 import tkinter.filedialog as fd
 import tkinter.messagebox as messagebox
+import Graph as graph
 
-#TO-DO
-# ---LEO
-# loop edges, finish and use move()
-# aplicar funcao abre uma janela com o canvas duplicado e o grafico modificado (canvas so para display)
 
-# funcao montar objeto Graph():
-#..percorre self._nodes para add qtd de nodes
-#..weight como tag nas edges OK
-#..para cada edge em self._edges acha par de nodes no left e right e o peso na sua tag
-#..add no grafo
-
+# aplicar funcao abre uma janela com o canvas duplicado e o grafico modificado (canvas so para display) OU functions only change edge colors
 # fazer um manual ou alguma coisa depois:
 # duplo clique deleta etc etc
-
-# possibilities: applying functions only change edge colors, keep track of before and after graphs, build graph as you are adding nodes and edges
-# -- LEO
-
-
+# save and open functions
 # save functions: define how i'm going to save the graph : FRED
 
 class App(tk.Tk):
@@ -54,12 +42,11 @@ class App(tk.Tk):
         # variables
         self._edges = [] # contains reference for every edge created
         self._edgeText = dict()
-        self._nodes = []
+        self._nodes = [] # contains reference for every node created
         self._nodeText = dict()
-        #self._loops = dict() # contains reference for every loop edges
         self._leftEdges = dict() # used to update edge position on moving a vertex :: index = edge ref, value = node ref of the leftmost end of the edge
         self._rightEdges = dict() # used to update edge position on moving a vertex :: index = edge ref, value = node ref of the rightmost end of the edge
-        self._node_count = 0
+        self._node_count = -1
         self.line_start=None
         self._selectedEdge = None # reference for when you click an edge to edit its weight
 
@@ -77,8 +64,37 @@ class App(tk.Tk):
         self.canvas.tag_bind("node", "<ButtonRelease-1>", self.on_token_release)
         self.canvas.tag_bind("node", "<B1-Motion>", self.on_token_motion)
 
+        tk.Button(self, text="[TESTE] rodar algoritmo", command=self.generate_graph).pack()
+
         self.canvas.pack()
         frame.pack(fill=tk.BOTH)
+
+    def generate_graph(self):
+        #print("Vertices criados:", end='');print(self._nodes);print("Arestas criados:", end='');print(self._edges);print("leftedges criados:", end='');print(self._leftEdges);print("rightedges criados:", end='');print(self._rightEdges)
+
+        g = graph.Graph(0)
+
+        for v in self._nodes:
+            g.addVertex()
+        for e in self._edges:
+            left = self._nodes.index(self._leftEdges[e]) # left node index
+            right = self._nodes.index(self._rightEdges[e]) # right node index
+            weight = int(self.canvas.gettags(e)[1])
+            g.addEdge(left, right, weight)
+
+            '''
+            print("---------------------")
+            print(left)
+            print(right)
+            print(weight)
+            g.toString()
+            print("---------------------")
+            '''
+
+        g.hamCycle()
+        print(g.result)
+        
+        
 
     #functions of the menubar
     def choose_file(self):
@@ -147,28 +163,32 @@ class App(tk.Tk):
         # if the edge end is the current node being dragged: update its position
         for e in self._leftEdges:
             if(self._leftEdges[e] == self._drag_data["item"]):
-                original = self.canvas.coords(e)
-                self.canvas.coords(e, event.x, event.y, original[2], original[3])
+                if "loop" in self.canvas.gettags(e):
+                    # if the edge is a loop use different method to move it and its text
+                    self.canvas.move(e, delta_x, delta_y)
+                    self.canvas.move(self._edgeText[e], delta_x, delta_y)
+                else:
+                    # if it is a normal edge get original coordinates and update half of it
+                    original = self.canvas.coords(e)
+                    self.canvas.coords(e, event.x, event.y, original[2], original[3])
+                    # some really bad but functioning code to move edge weight text
+                    int_x = (event.x + original[2]) / 2
+                    int_y = (event.y + original[3]) / 2
+                    self.canvas.coords(self._edgeText[e], int_x-15, int_y-15)
                 
-                # some really bad but functioning code to move edge weight text
-                int_x = (event.x + original[2]) / 2
-                int_y = (event.y + original[3]) / 2
-                self.canvas.coords(self._edgeText[e], int_x-12, int_y-12)
-
         for e in self._rightEdges:
             if(self._rightEdges[e] == self._drag_data["item"]):
-                original = self.canvas.coords(e)
-                self.canvas.coords(e, original[0], original[1], event.x, event.y)
-                
-                # some really bad but functioning code to move edge weight text
-                int_x = (event.x + original[0]) / 2
-                int_y = (event.y + original[1]) / 2
-                self.canvas.coords(self._edgeText[e], int_x-12, int_y-12)
-
-
-        # get pair of x,y that needs to change
-        # use coords() to change
-        # do this with every edge that has that node
+                if "loop" in self.canvas.gettags(e):
+                    # everything was already moved in the first for
+                    pass
+                else:
+                    # if it is a normal edge get original coordinates and update half of it
+                    original = self.canvas.coords(e)
+                    self.canvas.coords(e, original[0], original[1], event.x, event.y)
+                    # some really bad but functioning code to move edge weight text
+                    int_x = (event.x + original[0]) / 2
+                    int_y = (event.y + original[1]) / 2
+                    self.canvas.coords(self._edgeText[e], int_x-15, int_y-15)
 
     def draw_node(self, event):
         # calculate node position placement
@@ -187,7 +207,6 @@ class App(tk.Tk):
     def connect_node(self, event):
         # get mouse position
         x, y = event.x, event.y
-
         
         if not self.line_start:
             # this is the first click -> leftmost edge end
@@ -200,27 +219,29 @@ class App(tk.Tk):
             # this is the second click -> rightmost edge end
             x_origin, y_origin = self.line_start
             self.line_start = None
-
-            '''
+            
+            # check if the edge created is a loop
             if self.firstnode == self.canvas.find_closest(x, y)[0]:
-                print("THIS IS A LOOP")
-                loop = self.canvas.create_oval(x, y, x-45, y-45, fill='', activefill="red", width=3, tags=("loop",))
-                self.canvas.tag_lower(loop)
-                self._loops[self.firstnode] = loop
-            '''
+                # draws an oval instead of a line
+                x1,y1,x2,y2 = self.canvas.coords(self.firstnode)
+                edge = self.canvas.create_oval(x2-15, y2-15, x2-70, y2-70, fill='', activeoutline="red", width=3, tags=("edge", 1, "loop"))
+                self.canvas.tag_lower(edge)
 
-            # draws the line on the lower level of the canvas
-            edge = self.canvas.create_line(x_origin, y_origin, x, y, activefill="red", width=3, tags=("edge", 1))
-            self.canvas.tag_lower(edge)
+                # saves the edge reference
+                self._edges.append(edge)
+                self._edgeText[self._edges[-1]] = self.canvas.create_text(x2-70, y2-75, fill="black", font="Helvetica 10 bold", text="1")
+            else:
+                # not a loop -> draw a line connecting both selected nodes
+                edge = self.canvas.create_line(x_origin, y_origin, x, y, activefill="red", width=3, tags=("edge", 1))
+                self.canvas.tag_lower(edge)
 
-            # saves the edge reference
-            self._edges.append(edge)
+                # saves the edge reference
+                self._edges.append(edge)
 
-            #draws edge text on canvas
-            # edgeText = dictionary where index = last edge created and value = text
-            int_x = (x_origin + x) / 2
-            int_y = (y_origin + y) / 2
-            self._edgeText[self._edges[-1]] = self.canvas.create_text(int_x-12, int_y-12, fill="black", font="Helvetica 12 bold", text="1")
+                # calculating position for the edge text
+                int_x = (x_origin + x) / 2
+                int_y = (y_origin + y) / 2
+                self._edgeText[self._edges[-1]] = self.canvas.create_text(int_x-15, int_y-15, fill="black", font="Helvetica 10 bold", text="1")
 
             # used to update edge position when dragging a node
             self._leftEdges[edge] = self.firstnode
@@ -259,11 +280,6 @@ class App(tk.Tk):
             self._leftEdges.pop(e)
             self._rightEdges.pop(e)
             self._edgeText.pop(e)
-        
-        print(self._nodes)
-        print(self._edges)
-        print(self._leftEdges)
-        print(self._rightEdges)
 
     def open_edge_window(self, event):
         # get mouse position
@@ -282,7 +298,10 @@ class App(tk.Tk):
         tk.Button(self.edgewindow, text="Delete Edge", command=self.delete_edge).pack(padx=5,pady=2)
     
     def submit(self):
-        self.canvas.itemconfig(self._selectedEdge, tags=("edge", self.weight.get()))
+        if "loop" in self.canvas.gettags(self._selectedEdge):
+            self.canvas.itemconfig(self._selectedEdge, tags=("edge", self.weight.get(), "loop"))
+        else:
+            self.canvas.itemconfig(self._selectedEdge, tags=("edge", self.weight.get()))
         self.canvas.itemconfigure(self._edgeText[self._selectedEdge], text=str(self.weight.get()))
         self.edgewindow.destroy()
     
