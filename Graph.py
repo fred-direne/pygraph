@@ -37,17 +37,16 @@ class Graph(object):
             print(row),
             print
 
-    def __dfsAux(self,v,visited): 
+    def __dfsAux(self,v, v_from, visited): 
         visited[v]= True
-        if len(self.path) > 0:
-            v_from = self.path[-1]
+        if v_from > -1:
             self.result[v_from][v] = self.adjMatrix[v_from][v]
             self.result[v][v_from] = self.adjMatrix[v][v_from]
         self.path.append(v)
 
         for i in range(self.size): 
             if visited[i]==False and self.adjMatrix[v][i] > 0: 
-                self.__dfsAux(i,visited)
+                self.__dfsAux(i, v, visited)
 
     def __isConnected(self): 
    
@@ -60,7 +59,7 @@ class Graph(object):
         if i == self.size-1: 
             return True
   
-        self.__dfsAux(0,visited) 
+        self.__dfsAux(0, -1, visited) 
 
         for i in range(self.size): 
             if visited[i]==False and sum(self.adjMatrix[i]) > 0: 
@@ -123,7 +122,7 @@ class Graph(object):
         # initialize matrix of result path
         self.result = [[0 for j in range(self.size)] for i in range(self.size)]
 
-        self.__dfsAux(v, visited)
+        self.__dfsAux(v, -1, visited)
 
         return self.path
     
@@ -212,26 +211,26 @@ class Graph(object):
             self.result[ self.path[u] ][ u ] = self.adjMatrix[ self.path[u] ][ u ]
 
         print(self.path)
-g = Graph(0)
-g.addVertex()
-g.addVertex()
-g.addVertex()
-g.addVertex()
+# g = Graph(0)
 # g.addVertex()
-g.addEdge(0,1, 9)
-g.addEdge(0,2, 1)
-g.addEdge(1,2, 3)
-g.addEdge(2,3, 2)
-g.primMST()
-# g.addEdge(1,4, 1)
-# g.addEdge(2,4, 1)
-# g.addEdge(3,4, 1)
-# g.hamCycle()
-# print()
+# g.addVertex()
+# g.addVertex()
+# g.addVertex()
+# # g.addVertex()
+# g.addEdge(0,1, 9)
+# g.addEdge(0,2, 1)
+# g.addEdge(1,2, 3)
+# g.addEdge(2,3, 2)
+# g.primMST()
+# # g.addEdge(1,4, 1)
+# # g.addEdge(2,4, 1)
+# # g.addEdge(3,4, 1)
+# # g.hamCycle()
+# # print()
+# # g.toString()
+# # print(g.isEulerian())
+# # g.toString()
+# # print(g.isEulerian())
+# # print(g.dfs(0))
 # g.toString()
-# print(g.isEulerian())
-# g.toString()
-# print(g.isEulerian())
-# print(g.dfs(0))
-g.toString()
 
