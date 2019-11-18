@@ -4,10 +4,13 @@ import tkinter.messagebox as messagebox
 import Graph as graph
 
 
-# aplicar funcao abre uma janela com o canvas duplicado e o grafico modificado (canvas so para display) OU functions only change edge colors
-# fazer um manual ou alguma coisa depois:
-# duplo clique deleta etc etc
+# aplicar funcao abre uma janela com o canvas duplicado e o grafico modificado (canvas so para display, caminho com cor diferente)
+# fazer um manual ou label com os botoes que da pra usar
+# nao pode criar dois caminhos mesma aresta
+# canvas tamanho igual ao do frame
 # save and open functions
+# find closest is bugging: try to filter by tag or something
+
 # save functions: define how i'm going to save the graph : FRED
 
 class App(tk.Tk):
@@ -25,9 +28,10 @@ class App(tk.Tk):
         file_menu.add_command(label="Save as...",command=self.save_as_file)
         menu.add_cascade(label="File",menu=file_menu)
         algorithm_menu=tk.Menu(menu,tearoff=0)
-        algorithm_menu.add_command(label="Eullerian Path")
-        algorithm_menu.add_command(label="Depth-first Search (DFS)")
-        algorithm_menu.add_command(label="Hamiltonian Path")
+        algorithm_menu.add_command(label="Is Eulerian", command=self.draw_eulerian)
+        algorithm_menu.add_command(label="Depth-first Search (DFS)", command=self.draw_dfs)
+        algorithm_menu.add_command(label="Hamiltonian Circuit", command=self.draw_ham)
+        algorithm_menu.add_command(label="Prim", command=self.draw_prim)
         menu.add_cascade(label="Algorithm",menu=algorithm_menu)
         menu.add_command(label="About",command=self.about)
         menu.add_command(label="Quit",command=self.quit)
@@ -40,6 +44,7 @@ class App(tk.Tk):
         self._drag_data = {"x": 0, "y": 0, "item": None}
 
         # variables
+        self._graph = graph.Graph(0)
         self._edges = [] # contains reference for every edge created
         self._edgeText = dict()
         self._nodes = [] # contains reference for every node created
@@ -64,37 +69,43 @@ class App(tk.Tk):
         self.canvas.tag_bind("node", "<ButtonRelease-1>", self.on_token_release)
         self.canvas.tag_bind("node", "<B1-Motion>", self.on_token_motion)
 
-        tk.Button(self, text="[TESTE] rodar algoritmo", command=self.generate_graph).pack()
-
         self.canvas.pack()
         frame.pack(fill=tk.BOTH)
 
     def generate_graph(self):
-        #print("Vertices criados:", end='');print(self._nodes);print("Arestas criados:", end='');print(self._edges);print("leftedges criados:", end='');print(self._leftEdges);print("rightedges criados:", end='');print(self._rightEdges)
-
-        g = graph.Graph(0)
-
         for v in self._nodes:
-            g.addVertex()
+            self._graph.addVertex()
         for e in self._edges:
             left = self._nodes.index(self._leftEdges[e]) # left node index
             right = self._nodes.index(self._rightEdges[e]) # right node index
             weight = int(self.canvas.gettags(e)[1])
-            g.addEdge(left, right, weight)
+            self._graph.addEdge(left, right, weight)
+    
+    def draw_eulerian(self):
+        print("EULERIAN PATH WINDOW")
 
-            '''
-            print("---------------------")
-            print(left)
-            print(right)
-            print(weight)
-            g.toString()
-            print("---------------------")
-            '''
+    def draw_dfs(self):
+        print("DFS WINDOW canvas")
 
-        g.hamCycle()
-        print(g.result)
-        
-        
+    def draw_ham(self):
+        print("HAMILTON CYCLE WINDOW canvas")
+
+    def draw_prim(self):
+        self.primwindow = tk.Toplevel(self)
+        self.primcanvas = tk.Canvas(self.primwindow, height=800, width=800, bg="white")
+        self.primcanvas.pack()
+
+        for id in self.canvas.find_all():
+            item_type = self.canvas.type(id)
+            position = self.canvas.coords(id)
+            options = self.canvas.itemconfigure(id)
+
+            if item_type == "text":
+                self.primcanvas.create_text(position, options)
+            elif item_type == "oval":
+                self.primcanvas.create_oval(position, options)
+            elif item_type == "line":
+                self.primcanvas.create_line(position, options)
 
     #functions of the menubar
     def choose_file(self):
