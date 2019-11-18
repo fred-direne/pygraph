@@ -1,3 +1,5 @@
+import sys
+
 class Graph(object):
     def __init__(self, size):
         self.adjMatrix = []
@@ -160,17 +162,67 @@ class Graph(object):
         self.toString() 
         return True
 
+    # aux function to find the vertex with minimum distance value,
+    def minDistance(self, distance, mstSet): 
+  
+        # initilaize min value as inf
+        min = sys.maxsize
+  
+        for v in range(self.size): 
+            if distance[v] < min and mstSet[v] == False: 
+                min = distance[v] 
+                min_index = v 
+  
+        return min_index 
+  
+    def primMST(self): 
+        # initialize matrix of result path
+        self.result = [[0 for j in range(self.size)] for i in range(self.size)]
+        # values used to pick minimum weight edge in cut 
+        distance = [sys.maxsize] * self.size
+        # array to store constructed MST  
+        self.path = [None] * self.size 
+        # make key 0 so that this vertex is picked as first vertex 
+        distance[0] = 0 
+        mstSet = [False] * self.size
+  
+        self.path[0] = -1
+  
+        for i in range(self.size): 
+  
+            # pick the minimum distance vertex from vertices not processed yet
+            u = self.minDistance(distance, mstSet) 
+  
+            # mark the minimum distance vertex as visited
+            mstSet[u] = True
 
-# g = Graph(0)
+            # update dist value of the adjacent vertices  
+            # of the picked vertex only if the current  
+            # distance is greater than new distance and 
+            # the vertex in not in the shotest path tree 
+            for v in range(self.size): 
+                # graph[u][v] is non zero only for adjacent vertices of m 
+                # mstSet[v] is false for vertices not yet included in MST 
+                # Update the key only if graph[u][v] is smaller than key[v] 
+                if self.adjMatrix[u][v] > 0 and mstSet[v] == False and distance[v] > self.adjMatrix[u][v]: 
+                        distance[v] = self.adjMatrix[u][v] 
+                        self.path[v] = u 
+        for u in range(len(self.path)):
+            self.result[ u ][ self.path[u] ] = self.adjMatrix[ u ][ self.path[u] ]
+            self.result[ self.path[u] ][ u ] = self.adjMatrix[ self.path[u] ][ u ]
+
+        print(self.path)
+g = Graph(0)
+g.addVertex()
+g.addVertex()
+g.addVertex()
+g.addVertex()
 # g.addVertex()
-# g.addVertex()
-# g.addVertex()
-# g.addVertex()
-# g.addVertex()
-# g.addEdge(0,1, 1)
-# g.addEdge(0,3, 1)
-# g.addEdge(1,2, 1)
-# g.addEdge(1,3, 1)
+g.addEdge(0,1, 9)
+g.addEdge(0,2, 1)
+g.addEdge(1,2, 3)
+g.addEdge(2,3, 2)
+g.primMST()
 # g.addEdge(1,4, 1)
 # g.addEdge(2,4, 1)
 # g.addEdge(3,4, 1)
@@ -181,5 +233,5 @@ class Graph(object):
 # g.toString()
 # print(g.isEulerian())
 # print(g.dfs(0))
-# g.toString()
+g.toString()
 
