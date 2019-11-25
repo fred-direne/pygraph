@@ -273,40 +273,29 @@ class App(tk.Tk):
             for j in range(i, len(am)):
                 if am[i][j] > 0:
                     #print("Edge found at: (%d, %d, w=%d)" % (i, j, am[i][j]))
-                    
-                    # FALTA MEXER NESTA PARTE AQUI PARA TERMINAR O LOAD
-
-                    x, y = event.x, event.y
-                            x_origin, y_origin = self.line_start
-                            self.line_start = None
+                    x, y = self.canvas.coords(self._nodes[i])[0], self.canvas.coords(self._nodes[i])[1]
+                    x_origin, y_origin = self.canvas.coords(self._nodes[j])[0], self.canvas.coords(self._nodes[j])[1]
                             
-                            # check if the edge created is a loop
-                            if self.firstnode == self.canvas.find_closest(x, y)[0]:
-                                # draws an oval instead of a line
-                                x1,y1,x2,y2 = self.canvas.coords(self.firstnode)
-                                edge = self.canvas.create_oval(x2-15, y2-15, x2-70, y2-70, fill='',outline="#808080", activeoutline="red", width=3, tags=("edge", 1, "loop"))
-                                self.canvas.tag_lower(edge)
+                    # check if the edge created is a loop
+                    if self._nodes[i] == self._nodes[j]:
+                        x1,y1,x2,y2 = self.canvas.coords(self._nodes[i])
+                        edge = self.canvas.create_oval(x2-15, y2-15, x2-70, y2-70, fill='',outline="#808080", activeoutline="red", width=3, tags=("edge", am[i][j], "loop"))
+                        self.canvas.tag_lower(edge)
+                        self._edges.append(edge)
+                        self._edgeText[self._edges[-1]] = self.canvas.create_text(x2-70, y2-75, fill="black", font="Helvetica 12 bold", text=str(am[i][j]))
+                    else:
+                        # not a loop -> draw a line connecting both selected nodes
+                        edge = self.canvas.create_line(x_origin+20, y_origin+20, x+20, y+20, fill="#808080", activefill="red", width=3, tags=("edge", am[i][j]))
+                        self.canvas.tag_lower(edge)
 
-                                # saves the edge reference
-                                self._edges.append(edge)
-                                self._edgeText[self._edges[-1]] = self.canvas.create_text(x2-70, y2-75, fill="black", font="Helvetica 12 bold", text="1")
-                            else:
-                                # not a loop -> draw a line connecting both selected nodes
-                                edge = self.canvas.create_line(x_origin, y_origin, x, y, fill="#808080", activefill="red", width=3, tags=("edge", 1))
-                                self.canvas.tag_lower(edge)
+                        self._edges.append(edge)
 
-                                # saves the edge reference
-                                self._edges.append(edge)
+                        int_x = (x_origin + x) / 2
+                        int_y = (y_origin + y) / 2
+                        self._edgeText[self._edges[-1]] = self.canvas.create_text(int_x-15, int_y-15, fill="black", font="Helvetica 12 bold", text=str(am[i][j]))
 
-                                # calculating position for the edge text
-                                int_x = (x_origin + x) / 2
-                                int_y = (y_origin + y) / 2
-                                self._edgeText[self._edges[-1]] = self.canvas.create_text(int_x-15, int_y-15, fill="black", font="Helvetica 12 bold", text="1")
-
-                            # used to update edge position when dragging a node
-                            self._leftEdges[edge] = self.firstnode
-                            self._rightEdges[edge] = self.canvas.find_closest(x, y)[0]        
-                        
+                    self._leftEdges[edge] = self._nodes[j]
+                    self._rightEdges[edge] = self._nodes[i]   
 
         
     def clear_canvas(self):
