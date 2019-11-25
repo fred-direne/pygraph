@@ -33,10 +33,10 @@ class App(tk.Tk):
         algorithm_menu.add_command(label="Hamiltonian Circuit", command=self.draw_ham)
         algorithm_menu.add_command(label="Prim's Algorithm", command=self.draw_prim)
 
-        algorithm_menu.add_command(label="[TEST] export AdjMatrix", command=self.export_adjmatrix)
-        algorithm_menu.add_command(label="[TEST] export Canvas Graph", command=self.export_graph)
-        algorithm_menu.add_command(label="[TEST] load Canvas Graph", command=self.load_graph)
-        algorithm_menu.add_command(label="[TEST] Clear Canvas (new file)", command=self.clear_canvas)
+        #algorithm_menu.add_command(label="[TEST] export AdjMatrix", command=self.export_adjmatrix)
+        #algorithm_menu.add_command(label="[TEST] export Canvas Graph", command=self.export_graph)
+        #algorithm_menu.add_command(label="[TEST] load Canvas Graph", command=self.load_graph)
+        #algorithm_menu.add_command(label="[TEST] Clear Canvas (new file)", command=self.clear_canvas)
 
         menu.add_cascade(label="Algorithm",menu=algorithm_menu)
         menu.add_command(label="About",command=self.about)
@@ -248,13 +248,67 @@ class App(tk.Tk):
             print(self.canvas.coords(vertice))
 
     
-    def load_graph(self):
-        # lê a matriz de adjacencia e guarda numa variavel, tipo: matriadj = [[..], [..], [..]]
-        # cria outra matriz também onde cada linha é a posicao dos vertices, exemplo: vertposicao = [[coord do v1], [coord do v2], [..]]
+    def load_graph(self, adjmatrix, coordvertices):
 
-        # depois vou pegar o cód pronto das outras funcoes e colar aqui para desenhar tudo
-        pass
+        am = list()
+        cv = list()
 
+        strs = adjmatrix.replace('[','').split('],')
+        lists = list(map(int, s.replace(']','').split(',')) for s in strs)
+        for i in lists:
+            am.append([ int(x) for x in i ])
+                
+        strs = coordvertices.replace('[','').split('],')
+        lists = list(map(float, s.replace(']','').split(',')) for s in strs)
+        for i in lists:
+            cv.append([ float(x) for x in i ])
+
+        for node in cv:
+            bbox = (node[0], node[1], node[2], node[3])
+            self._node_count += 1
+            self._nodes.append(self.canvas.create_oval(*bbox, fill="#77c777", activefill="#90EE90", tags=("node", self._node_count)))
+            self._nodeText[self._nodes[-1]] = self.canvas.create_text(node[0]+20, node[1]+20, fill="black", font="Helvetica 10 bold", text=self._node_count)
+
+        for i in range(len(am)):
+            for j in range(i, len(am)):
+                if am[i][j] > 0:
+                    #print("Edge found at: (%d, %d, w=%d)" % (i, j, am[i][j]))
+                    
+                    # FALTA MEXER NESTA PARTE AQUI PARA TERMINAR O LOAD
+
+                    x, y = event.x, event.y
+                            x_origin, y_origin = self.line_start
+                            self.line_start = None
+                            
+                            # check if the edge created is a loop
+                            if self.firstnode == self.canvas.find_closest(x, y)[0]:
+                                # draws an oval instead of a line
+                                x1,y1,x2,y2 = self.canvas.coords(self.firstnode)
+                                edge = self.canvas.create_oval(x2-15, y2-15, x2-70, y2-70, fill='',outline="#808080", activeoutline="red", width=3, tags=("edge", 1, "loop"))
+                                self.canvas.tag_lower(edge)
+
+                                # saves the edge reference
+                                self._edges.append(edge)
+                                self._edgeText[self._edges[-1]] = self.canvas.create_text(x2-70, y2-75, fill="black", font="Helvetica 12 bold", text="1")
+                            else:
+                                # not a loop -> draw a line connecting both selected nodes
+                                edge = self.canvas.create_line(x_origin, y_origin, x, y, fill="#808080", activefill="red", width=3, tags=("edge", 1))
+                                self.canvas.tag_lower(edge)
+
+                                # saves the edge reference
+                                self._edges.append(edge)
+
+                                # calculating position for the edge text
+                                int_x = (x_origin + x) / 2
+                                int_y = (y_origin + y) / 2
+                                self._edgeText[self._edges[-1]] = self.canvas.create_text(int_x-15, int_y-15, fill="black", font="Helvetica 12 bold", text="1")
+
+                            # used to update edge position when dragging a node
+                            self._leftEdges[edge] = self.firstnode
+                            self._rightEdges[edge] = self.canvas.find_closest(x, y)[0]        
+                        
+
+        
     def clear_canvas(self):
         self.canvas.delete("all")
         self._edges = []
@@ -288,9 +342,10 @@ class App(tk.Tk):
             file = open(filename,"r+")
             for line in file:
                 if line.startswith("Adj:"):
-                    line[5:len(line)]
+                    adjmatrix = line[5:len(line)]
                 elif line.startswith("Coord:"):
-                    line[7:len(line)]
+                    coordvertices = line[7:len(line)]
+            self.load_graph(adjmatrix, coordvertices)
             file.close()
 
     def save_file(self):
@@ -299,11 +354,17 @@ class App(tk.Tk):
         contents+=str(g.adjMatrix)
         contents+="\n"
         contents+="Coord: "
-        contents+="["
+
+        coordlist = list()
         for vertice in self._nodes:
-            contents+=str(self.canvas.coords(vertice))
-            contents+=","
-        contents+="]"    
+            coordlist.append(self.canvas.coords(vertice))
+        contents += str(coordlist)
+
+        # contents+="["
+        # for vertice in self._nodes:
+        #     contents+=str(self.canvas.coords(vertice))
+        #     contents+=","
+        # contents+="]"    
         new_file=fd.asksaveasfile(title="Save file",
                     defaultextension=".txt",
                     filetypes=(("Text files","*.txt"),))
