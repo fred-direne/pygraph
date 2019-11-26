@@ -3,8 +3,6 @@ import sys
 class Graph(object):
     def __init__(self, size):
         self.adjMatrix = []
-        # for i in range(size):
-        #     self.adjMatrix.append([0 for i in range(size)])
         self.size = size
     def addVertex(self):
         for v in self.adjMatrix:
@@ -111,8 +109,6 @@ class Graph(object):
   
                 # else remove v at the path
                 self.path[pos] = -1
-                # self.result[ self.path[pos-1] ][ v ] = 0
-                # self.result[ v ][ self.path[pos-1] ] = 0
         return False
 
     def dfs(self, v):
@@ -195,14 +191,8 @@ class Graph(object):
             # mark the minimum distance vertex as visited
             mstSet[u] = True
 
-            # update dist value of the adjacent vertices  
-            # of the picked vertex only if the current  
-            # distance is greater than new distance and 
-            # the vertex in not in the shotest path tree 
+            # update dist of adjacent vertices only if the current distance is greater than the new one and the picked vertex in not in the path tree
             for v in range(self.size): 
-                # graph[u][v] is non zero only for adjacent vertices of m 
-                # mstSet[v] is false for vertices not yet included in MST 
-                # Update the key only if graph[u][v] is smaller than key[v] 
                 if self.adjMatrix[u][v] > 0 and mstSet[v] == False and distance[v] > self.adjMatrix[u][v]: 
                         distance[v] = self.adjMatrix[u][v] 
                         self.path[v] = u 
@@ -211,26 +201,4 @@ class Graph(object):
             self.result[ self.path[u] ][ u ] = self.adjMatrix[ self.path[u] ][ u ]
 
         print(self.path)
-# g = Graph(0)
-# g.addVertex()
-# g.addVertex()
-# g.addVertex()
-# g.addVertex()
-# # g.addVertex()
-# g.addEdge(0,1, 9)
-# g.addEdge(0,2, 1)
-# g.addEdge(1,2, 3)
-# g.addEdge(2,3, 2)
-# g.primMST()
-# # g.addEdge(1,4, 1)
-# # g.addEdge(2,4, 1)
-# # g.addEdge(3,4, 1)
-# # g.hamCycle()
-# # print()
-# # g.toString()
-# # print(g.isEulerian())
-# # g.toString()
-# # print(g.isEulerian())
-# # print(g.dfs(0))
-# g.toString()
 
