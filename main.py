@@ -366,7 +366,7 @@ class App(tk.Tk):
             self.destroy()
 
     def about(self):
-        messagebox.showinfo("PyGraph","\n PyGraph \n\n\n Version: 1.0 \n Github: https://github.com/ftdneves/graph_program.git")        
+        messagebox.showinfo("PyGraph","\n PyGraph \n\n\n Version: 1.0")        
 
     def on_token_press(self, event):
         '''Beginning drag of an object'''
