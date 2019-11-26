@@ -328,6 +328,7 @@ class App(tk.Tk):
                 filetypes=filetypes)
         if filename:
             print(filename)
+            self.clear_canvas()
             file = open(filename,"r+")
             for line in file:
                 if line.startswith("Adj:"):
