@@ -1,1 +1,1 @@
-# graph_program
+# PyGraph
